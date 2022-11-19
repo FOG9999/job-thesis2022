@@ -7,8 +7,12 @@ import {
 import React, { Component } from 'react';
 import { useEffect } from 'react';
 import { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { USERTYPES } from '../../constants/userTypes';
 import ChangePassword from './ChangePassword/ChangePassword';
+import * as api from '../../api/index'
+import {viewUtils} from '../../utils/viewUtils';
+import { AUTH } from '../../constants/actionTypes';
 
 const defaultUser = {
     userType: USERTYPES.STUDENT,
@@ -20,14 +24,22 @@ const defaultUser = {
 
 const UserDetail = () => {
 
-    let [user, setUser] = useState({});
+    let [user, setUser] = useState({...defaultUser});
     let [isOpenChangePassword, setIsOpenChangePassword] = useState(false);
-    
+    let [submitIsDisabled, setSubmitIsDisabled] = useState(true);
+
+    let dispatch = useDispatch();
+    let userStore = useSelector(state => state.auth.authData);
+
     useEffect(() => {
-        setUser({
-            ...defaultUser
-        })
-    }, [])
+        let userData = JSON.parse(localStorage.getItem('profile'));
+        if (userData.result) {
+            setUser({
+                ...userData.result
+            })
+        }
+
+    }, [userStore]);
 
     let openChangePassword = () => {
         setIsOpenChangePassword(true);
@@ -37,9 +49,8 @@ const UserDetail = () => {
         setIsOpenChangePassword(false);
     }
 
-    let submitChangePassword = ({oldPass, newPass}) => {
+    let submitChangePassword = ({ oldPass, newPass }) => {
         setIsOpenChangePassword(false);
-        console.log(oldPass, newPass);
     }
 
     let onChangeTextInput = (e) => {
@@ -47,6 +58,27 @@ const UserDetail = () => {
             ...user,
             [e.target.name]: e.target.value
         })
+        setSubmitIsDisabled(false);
+    }
+
+    let updateUser = async () => {
+        let res = await api.updateUser(user._id, user);
+        if(res.data.message){
+            viewUtils.showAlert(dispatch, res.data.message, 'error');
+        }
+        else {
+            viewUtils.showAlert(dispatch, 'Update user thành công', 'success');
+            updateUserClient(res.data);
+        }
+    }
+
+    let updateUserClient = (updatedUser) => {
+        let userData = JSON.parse(localStorage.getItem('profile'));
+        userData.result = {
+            ...userData.result,
+            ...updatedUser
+        }
+        dispatch({type: AUTH, data: userData});
     }
 
     return <Grid container spacing={5} style={{ marginTop: '6vh', width: '`00%', padding: '0px 20px 20px 20px' }}>
@@ -117,10 +149,10 @@ const UserDetail = () => {
                             <ChangePassword onClose={closeChangePassword} isOpen={isOpenChangePassword} onSubmit={submitChangePassword} />
                         </Grid>
                         <Grid item xs={6}>
-                            <Button size="small" color="secondary" startIcon={<UndoOutlined />} style={{ marginRight: '15px' }}>
+                            <Button size="small" color="secondary" startIcon={<UndoOutlined />} style={{ marginRight: '15px' }} disabled={submitIsDisabled}>
                                 Hủy bỏ các thay đổi
                             </Button>
-                            <Button size="small" color="primary" startIcon={<AccessAlarm />}>
+                            <Button size="small" color="primary" startIcon={<AccessAlarm />}  disabled={submitIsDisabled} onClick={() => updateUser()}>
                                 Lưu thay đổi
                             </Button>
                         </Grid>

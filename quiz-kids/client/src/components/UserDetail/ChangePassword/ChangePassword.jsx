@@ -1,11 +1,21 @@
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Typography } from '@material-ui/core';
 import React from 'react';
+import { useEffect } from 'react';
 import { useState } from 'react';
 
 const ChangePassword = ({ onClose, isOpen, onSubmit }) => {
 
     let [oldPass, setOldPass] = useState("");
     let [newPass, setNewPass] = useState("");
+
+    let clearOldForm = () => {
+        setOldPass('');
+        setNewPass('');
+    }
+
+    useEffect(() => {
+        clearOldForm();
+    }, [isOpen])
 
     let onChangeTextInput = (e) => {
         // <input name="oldPass"/> -> funcName='set'+OldPass'

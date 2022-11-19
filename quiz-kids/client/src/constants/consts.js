@@ -1,0 +1,1 @@
+export const ALERT_SHOWTIME = 5000; // thời gian xuất hiện của Alert

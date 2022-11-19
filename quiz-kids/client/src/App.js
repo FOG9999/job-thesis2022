@@ -13,12 +13,16 @@ import PlayerScreen from "./components/Game/PlayerScreen/PlayerScreen"
 import JoinGame from "./components/Game/JoinGame/JoinGame"
 import UserDetail from "./components/UserDetail/UserDetail.jsx"
 import { io } from "socket.io-client"
-import { useDispatch } from "react-redux"
+import { useDispatch, useSelector } from "react-redux"
 import { createSocket } from "./actions/socket"
+import { Alert } from "@material-ui/lab"
+import AlertCommon from "./components/Alert/AlertCommon"
 
 function App() {
   const user = JSON.parse(localStorage.getItem("profile"))
   const dispatch = useDispatch()
+  const alertState = useSelector(state => state.alert);
+  console.log(alertState);
 
   useEffect(() => {
     const socket = io("http://localhost:3001")
@@ -30,6 +34,7 @@ function App() {
   return (
     <BrowserRouter>
       <Navbar />
+      {alertState.isShow ? <AlertCommon message={alertState.message} type={alertState.type} isOpen={alertState.isShow} /> : <></>}
       <Switch>
         <Route path="/" exact component={Home} />
         <Route path="/auth" exact component={() => (user === null ? <Auth /> : <Redirect to="/" />)} />
