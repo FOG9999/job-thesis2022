@@ -12,6 +12,7 @@ API.interceptors.request.use((req) => {
 })
 
 export const fetchUsers = () => API.get("/users")
+export const searchUsers = (filters) => API.post("/users/search", {filters})
 export const createUser = (newUser) => API.post("/users", newUser)
 export const updateUser = (id, updatedUser) =>
   API.patch(`/users/${id}`, updatedUser)

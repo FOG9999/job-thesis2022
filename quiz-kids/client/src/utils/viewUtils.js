@@ -9,8 +9,8 @@ const viewUtils = {
     closeAlert: (dispatch) => {
         dispatch(toggleAlert({ message: '', isOpen: false, type: '' }))
     },
-    openConfirm: (dispatch, message, callback = () => {}) => {
-        dispatch(toggleConfirm({ message, isOpen: true, callback }))
+    openConfirm: (dispatch, message, callback = () => {}, params = []) => {
+        dispatch(toggleConfirm({ message, isOpen: true, callback, params }))
     },
     closeConfirm: (dispatch) => {
         dispatch(toggleConfirm({ message: '', isOpen: false }))

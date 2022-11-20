@@ -35,6 +35,35 @@ const getUsers = async (req, res) => {
   }
 };
 
+const searchUsers = async (req, res) => {
+  try {
+    const { filters } = req.body;
+    function escapeRegExp(input) {
+      if (!input) return '';
+      return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); // $& means the whole matched string
+    }
+    // build object query in mongoose
+    let buildFilters = (excludeFields = []) => {
+      let props = Object.getOwnPropertyNames(filters);
+      let searchFilters = {};
+      props.forEach(p => {
+        if (excludeFields.indexOf(p) >= 0) {
+          searchFilters[p] = filters[p].trim()
+        }
+        else if (filters[p] && excludeFields.indexOf(p) < 0) {
+          searchFilters[p] = new RegExp(escapeRegExp(filters[p].trim()), 'i');
+        }
+      })
+      return searchFilters;
+    }
+    let users = await User.find({ ...buildFilters(['userType']) }).select('-password');
+    users = users.filter(x => ['admin', 'administrator'].indexOf(x.userName) < 0);
+    res.status(200).send(users);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getUser = async (req, res) => {
   let user;
   try {
@@ -87,9 +116,9 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const changePassword = async (req,res) => {
+const changePassword = async (req, res) => {
   const { id } = req.params;
-  const {oldPass, newPass} = req.body;
+  const { oldPass, newPass } = req.body;
   if (!mongoose.Types.ObjectId.isValid(id)) {
     return res.status(404).send(`No user with id: ${id}`);
   }
@@ -101,13 +130,13 @@ const changePassword = async (req,res) => {
     if (await bcrypt.compare(oldPass, user.password)) {
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(newPass, salt);
-      await User.findByIdAndUpdate(id, {password: hashedPassword});
-      return res.json({success: true});
+      await User.findByIdAndUpdate(id, { password: hashedPassword });
+      return res.json({ success: true });
     }
-    else res.json({message: 'Mật khẩu cũ không đúng'})
+    else res.json({ message: 'Mật khẩu cũ không đúng' })
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 }
 
-module.exports = { createUser, getUsers, getUser, updateUser, deleteUser, changePassword };
+module.exports = { createUser, getUsers, getUser, updateUser, deleteUser, changePassword, searchUsers };

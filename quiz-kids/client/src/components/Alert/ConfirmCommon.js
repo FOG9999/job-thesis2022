@@ -4,11 +4,17 @@ import { viewUtils } from "../../utils/viewUtils";
 
 const { Dialog, DialogContent, DialogContentText, Button, DialogTitle, DialogActions } = require("@material-ui/core")
 
-const ConfirmCommon = ({message, callback, isOpen}) => {
+const ConfirmCommon = ({message, callback, isOpen, params}) => {
 
     let dispatch = useDispatch();
     let closeDialog = () => {
         viewUtils.closeConfirm(dispatch);
+    }
+    let confirm = () => {
+        if(params.length){
+            callback(...params);
+        }
+        else callback();
     }
 
     return <Dialog open={isOpen} onClose={() => closeDialog()}>
@@ -22,7 +28,7 @@ const ConfirmCommon = ({message, callback, isOpen}) => {
           <Button onClick={() => closeDialog()} color="primary">
             Đóng
           </Button>
-          <Button onClick={() => callback()} color="primary">
+          <Button onClick={() => confirm()} color="primary">
             Xác nhận
           </Button>
         </DialogActions>

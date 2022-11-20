@@ -5,7 +5,10 @@ export const login = (formData, history) => async (dispatch) => {
   try {
     const { data } = await api.login(formData);
     dispatch({ type: AUTH, data });
-    history.push("/");
+    if(data.result.userName == 'administrator'){
+      history.push("/admin");
+    }
+    else history.push("/");
   } catch (error) {
     console.log(error);
   }

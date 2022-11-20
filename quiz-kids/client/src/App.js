@@ -18,12 +18,13 @@ import { createSocket } from "./actions/socket"
 import { Alert } from "@material-ui/lab"
 import AlertCommon from "./components/Alert/AlertCommon"
 import ConfirmCommon from "./components/Alert/ConfirmCommon"
+import Administrator from "./components/Administrator/Administrator"
 
 function App() {
-  const user = JSON.parse(localStorage.getItem("profile"))
+  let user = useSelector(state => state.auth.authData)
   const dispatch = useDispatch()
-  const alertState = useSelector(state => state.alert);
-  const confirmState = useSelector(state => state.confirm);
+  let alertState = useSelector(state => state.alert);
+  let confirmState = useSelector(state => state.confirm);
 
   useEffect(() => {
     const socket = io("http://localhost:3001")
@@ -36,7 +37,7 @@ function App() {
     <BrowserRouter>
       <Navbar />
       {alertState.isShow ? <AlertCommon message={alertState.message} type={alertState.type} isOpen={alertState.isShow} /> : <></>}
-      {confirmState.isShow ? <ConfirmCommon message={confirmState.message} callback={confirmState.callback} isOpen={confirmState.isShow} /> : <></>}
+      {confirmState.isShow ? <ConfirmCommon message={confirmState.message} callback={confirmState.callback} isOpen={confirmState.isShow} params={confirmState.params} /> : <></>}
       <Switch>
         <Route path="/" exact component={Home} />
         <Route path="/auth" exact component={() => (user === null ? <Auth /> : <Redirect to="/" />)} />
@@ -49,6 +50,7 @@ function App() {
         <Route path="/games/player/:id" exact component={PlayerScreen} />
         <Route path="/myquizes" exact component={MyQuizes} />
         <Route path="/userdetail" exact component={UserDetail} />
+        <Route path="/admin" exact component={Administrator} />
       </Switch>
       <Footer />
     </BrowserRouter>

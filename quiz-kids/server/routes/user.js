@@ -8,6 +8,7 @@ const {
   updateUser,
   deleteUser,
   changePassword,
+  searchUsers,
 } = require("../controllers/user");
 
 router
@@ -24,5 +25,9 @@ router
 router
 .route("/changePassWord/:id")
 .post(changePassword);
+
+router
+.route('/search')
+.post(searchUsers)
 
 module.exports = router;
