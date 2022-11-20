@@ -2,7 +2,8 @@ import { Avatar, Box, Button, ButtonGroup, Card, CardActionArea, CardActions, Ca
 import {
     AccessAlarm,
     UndoOutlined,
-    LockOutlined
+    LockOutlined,
+    SaveOutlined
 } from '@material-ui/icons';
 import React, { Component } from 'react';
 import { useEffect } from 'react';
@@ -192,7 +193,7 @@ const UserDetail = () => {
                             <Button size="small" color="secondary" startIcon={<UndoOutlined />} style={{ marginRight: '15px' }} disabled={submitIsDisabled} onClick={() => openConfirmDiscardChanges()}>
                                 Hủy bỏ các thay đổi
                             </Button>
-                            <Button size="small" color="primary" startIcon={<AccessAlarm />} disabled={submitIsDisabled} onClick={() => openConfirmChanges()}>
+                            <Button size="small" color="primary" startIcon={<SaveOutlined />} disabled={submitIsDisabled} onClick={() => openConfirmChanges()}>
                                 Lưu thay đổi
                             </Button>
                         </Grid>

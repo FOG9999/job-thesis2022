@@ -6,6 +6,7 @@ import { DeleteOutline, EditLocationOutlined, PersonAddOutlined } from '@materia
 import { escapeRegExp } from '../../../utils/funcUtils';
 import { viewUtils } from '../../../utils/viewUtils';
 import { useDispatch } from 'react-redux';
+import UserDialog from './UserDialog';
 
 const UserManagement = ({ userType }) => {
 
@@ -42,14 +43,11 @@ const UserManagement = ({ userType }) => {
             renderCell: (params) => {
                 return <Box>
                     <Grid container spacing={1}>
-                        <Grid item xs={4}>
-                            <Button title='Thêm mới' startIcon={<PersonAddOutlined />} />
+                        <Grid item xs={8}>
+                            <Button size='small' color='primary' title='Chỉnh sửa' startIcon={<EditLocationOutlined />} onClick={() => openDialog(params.id)}>Chỉnh sửa</Button>
                         </Grid>
                         <Grid item xs={4}>
-                            <Button title='Chỉnh sửa' startIcon={<EditLocationOutlined />} />
-                        </Grid>
-                        <Grid item xs={4}>
-                            <Button title='Xóa' onClick={() => openConfirmDeleteUser(params.id)} startIcon={<DeleteOutline />} />
+                            <Button size='small' color='secondary' title='Xóa' onClick={() => openConfirmDeleteUser(params.id)} startIcon={<DeleteOutline />}>Xóa</Button>
                         </Grid>
                     </Grid>
                 </Box>
@@ -65,6 +63,8 @@ const UserManagement = ({ userType }) => {
         mail: ''
     })
     let [userList, setUserList] = useState([]);
+    let [isOpenDialog, setIsOpenDialog] = useState(false);
+    let [userIdDialog, setUserIdDialog] = useState('');
     let dispatch = useDispatch();
 
     useEffect(() => {
@@ -78,6 +78,43 @@ const UserManagement = ({ userType }) => {
             ...filters,
             [e.target.name]: e.target.value
         })
+    }
+
+    let openDialog = (id) => {
+        setUserIdDialog(id);
+        setIsOpenDialog(true);
+    }
+
+    let closeDialog = () => {
+        setIsOpenDialog(false);
+    }
+
+    let submitDialog = async (user) => {
+        console.log(user);
+        user = {
+            ...user,
+            userType
+        }
+        if(user._id){
+            let res = await api.updateUser(user._id, user);
+            if(res.data.message){
+                viewUtils.showAlert(dispatch, res.data.message, 'error');
+            }
+            else {
+                viewUtils.showAlert(dispatch, 'Cập nhật người dùng thành công', 'success');
+            }
+        }
+        else {
+            let res = await api.createUser(user);
+            if(res.data.message){
+                viewUtils.showAlert(dispatch, res.data.message, 'error');
+            }
+            else {
+                viewUtils.showAlert(dispatch, 'Tạo mới người dùng thành công', 'success');
+            }
+        }
+        setIsOpenDialog(false);
+        getData();
     }
 
     let getData = async () => {
@@ -97,6 +134,12 @@ const UserManagement = ({ userType }) => {
         viewUtils.openConfirm(dispatch, `Bạn xác nhận sẽ xóa user ${selectedUser.userName}?`, deleteUser, [userId]);        
     }
 
+    let onKeyDown = (e) => {
+        if(e.keyCode == 13){
+            getData();
+        }
+    }
+
     return <Box my={2}>
         <Box mb={2}>
             <Card>
@@ -108,6 +151,7 @@ const UserManagement = ({ userType }) => {
                                 label="Họ"
                                 name='firstName'
                                 fullWidth
+                                onKeyDown={onKeyDown}
                                 value={filters.firstName}
                                 onChange={onChangeTextInput}
                             />
@@ -118,6 +162,7 @@ const UserManagement = ({ userType }) => {
                                 name='lastName'
                                 value={filters.lastName}
                                 fullWidth
+                                onKeyDown={onKeyDown}
                                 onChange={onChangeTextInput}
                             />
                         </Grid>
@@ -128,6 +173,7 @@ const UserManagement = ({ userType }) => {
                                 label="Email"
                                 name='mail'
                                 fullWidth
+                                onKeyDown={onKeyDown}
                                 value={filters.mail}
                                 onChange={onChangeTextInput}
                             />
@@ -136,8 +182,10 @@ const UserManagement = ({ userType }) => {
                             <TextField
                                 label="Tên đăng nhập"
                                 name='userName'
+                                autocomplete="new-password"
                                 value={filters.userName}
                                 fullWidth
+                                onKeyDown={onKeyDown}
                                 onChange={onChangeTextInput}
                             />
                         </Grid>
@@ -145,6 +193,7 @@ const UserManagement = ({ userType }) => {
                 </CardContent>
                 <CardActions>
                     <Box display='flex' justifyContent='center' my={2} width="100%">
+                        <Button title='Thêm mới' style={{marginRight: '10px'}} onClick={() => openDialog('')} variant="contained" color="secondary">Thêm mới</Button>
                         <Button title='Tìm kiếm' onClick={() => getData()} variant="contained" color="primary">Tìm kiếm</Button>
                     </Box>
                 </CardActions>
@@ -157,6 +206,7 @@ const UserManagement = ({ userType }) => {
                     columns={columns}
                     pageSize={5}
                 />
+                <UserDialog id={userIdDialog} isOpen={isOpenDialog} onClose={closeDialog} onSubmit={submitDialog} />
             </div>
         </Box>
     </Box>
