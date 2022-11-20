@@ -15,6 +15,7 @@ export const fetchUsers = () => API.get("/users")
 export const createUser = (newUser) => API.post("/users", newUser)
 export const updateUser = (id, updatedUser) =>
   API.patch(`/users/${id}`, updatedUser)
+export const changePassword = (id, oldPass, newPass) => API.post(`/users/changePassWord/${id}`, {oldPass, newPass});
 export const deleteUser = (id) => API.delete(`/users/${id}`)
 
 export const fetchQuizes = () => API.get("/quizes")

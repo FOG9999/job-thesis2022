@@ -11,8 +11,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { USERTYPES } from '../../constants/userTypes';
 import ChangePassword from './ChangePassword/ChangePassword';
 import * as api from '../../api/index'
-import {viewUtils} from '../../utils/viewUtils';
-import { AUTH } from '../../constants/actionTypes';
+import { viewUtils } from '../../utils/viewUtils';
+import { AUTH, LOGOUT } from '../../constants/actionTypes';
+import { ALERT_SHOWTIME } from '../../constants/consts';
+import { toggleConfirm } from '../../actions/confirm';
 
 const defaultUser = {
     userType: USERTYPES.STUDENT,
@@ -24,7 +26,7 @@ const defaultUser = {
 
 const UserDetail = () => {
 
-    let [user, setUser] = useState({...defaultUser});
+    let [user, setUser] = useState({ ...defaultUser });
     let [isOpenChangePassword, setIsOpenChangePassword] = useState(false);
     let [submitIsDisabled, setSubmitIsDisabled] = useState(true);
 
@@ -49,7 +51,24 @@ const UserDetail = () => {
         setIsOpenChangePassword(false);
     }
 
-    let submitChangePassword = ({ oldPass, newPass }) => {
+    let submitChangePassword = async ({ oldPass, newPass }) => {
+        try {
+            let res = await api.changePassword(user._id, oldPass, newPass);
+            if (res.data.message) {
+                viewUtils.showAlert(dispatch, res.data.message, 'error');
+                return;
+            }
+            else {
+                viewUtils.showAlert(dispatch, 'Cập nhật mật khẩu thành công. Vui lòng đăng nhập lại');
+
+                setTimeout(() => {
+                    dispatch({ type: LOGOUT });
+                    window.location.href = '/auth';
+                }, ALERT_SHOWTIME);
+            }
+        } catch (error) {
+            viewUtils.showAlert(dispatch, 'Có lỗi xẩy ra. Vui lòng thử lại', 'error')
+        }
         setIsOpenChangePassword(false);
     }
 
@@ -63,13 +82,14 @@ const UserDetail = () => {
 
     let updateUser = async () => {
         let res = await api.updateUser(user._id, user);
-        if(res.data.message){
+        if (res.data.message) {
             viewUtils.showAlert(dispatch, res.data.message, 'error');
         }
         else {
             viewUtils.showAlert(dispatch, 'Update user thành công', 'success');
             updateUserClient(res.data);
         }
+        viewUtils.closeConfirm(dispatch);    
     }
 
     let updateUserClient = (updatedUser) => {
@@ -78,7 +98,27 @@ const UserDetail = () => {
             ...userData.result,
             ...updatedUser
         }
-        dispatch({type: AUTH, data: userData});
+        dispatch({ type: AUTH, data: userData });
+        setSubmitIsDisabled(true);
+    }
+
+    let cancelChanges = () => {
+        let userData = JSON.parse(localStorage.getItem('profile'));
+        if (userData.result) {
+            setUser({
+                ...userData.result
+            })
+        }
+        setSubmitIsDisabled(true);
+        viewUtils.closeConfirm(dispatch);
+    }
+
+    let openConfirmChanges = () => {
+        viewUtils.openConfirm(dispatch, 'Bạn xác nhận muốn lưu các thay đổi?', updateUser);
+    }
+
+    let openConfirmDiscardChanges = () => {
+        viewUtils.openConfirm(dispatch, 'Bạn xác nhận muốn hủy bỏ các thay đổi?', cancelChanges);
     }
 
     return <Grid container spacing={5} style={{ marginTop: '6vh', width: '`00%', padding: '0px 20px 20px 20px' }}>
@@ -149,10 +189,10 @@ const UserDetail = () => {
                             <ChangePassword onClose={closeChangePassword} isOpen={isOpenChangePassword} onSubmit={submitChangePassword} />
                         </Grid>
                         <Grid item xs={6}>
-                            <Button size="small" color="secondary" startIcon={<UndoOutlined />} style={{ marginRight: '15px' }} disabled={submitIsDisabled}>
+                            <Button size="small" color="secondary" startIcon={<UndoOutlined />} style={{ marginRight: '15px' }} disabled={submitIsDisabled} onClick={() => openConfirmDiscardChanges()}>
                                 Hủy bỏ các thay đổi
                             </Button>
-                            <Button size="small" color="primary" startIcon={<AccessAlarm />}  disabled={submitIsDisabled} onClick={() => updateUser()}>
+                            <Button size="small" color="primary" startIcon={<AccessAlarm />} disabled={submitIsDisabled} onClick={() => openConfirmChanges()}>
                                 Lưu thay đổi
                             </Button>
                         </Grid>

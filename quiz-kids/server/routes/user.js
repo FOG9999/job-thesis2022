@@ -7,6 +7,7 @@ const {
   getUser,
   updateUser,
   deleteUser,
+  changePassword,
 } = require("../controllers/user");
 
 router
@@ -19,5 +20,9 @@ router
   .get(getUser)
   .patch(updateUser)
   .delete(deleteUser);
+
+router
+.route("/changePassWord/:id")
+.post(changePassword);
 
 module.exports = router;

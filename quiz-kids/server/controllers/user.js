@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 const createUser = async (req, res) => {
   const { userType, firstName, lastName, userName, mail, password } = req.body;
@@ -86,4 +87,27 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { createUser, getUsers, getUser, updateUser, deleteUser };
+const changePassword = async (req,res) => {
+  const { id } = req.params;
+  const {oldPass, newPass} = req.body;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).send(`No user with id: ${id}`);
+  }
+  try {
+    let user = await User.findById(req.params.id);
+    if (user == null) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    if (await bcrypt.compare(oldPass, user.password)) {
+      const salt = await bcrypt.genSalt();
+      const hashedPassword = await bcrypt.hash(newPass, salt);
+      await User.findByIdAndUpdate(id, {password: hashedPassword});
+      return res.json({success: true});
+    }
+    else res.json({message: 'Mật khẩu cũ không đúng'})
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
+module.exports = { createUser, getUsers, getUser, updateUser, deleteUser, changePassword };

@@ -17,12 +17,13 @@ import { useDispatch, useSelector } from "react-redux"
 import { createSocket } from "./actions/socket"
 import { Alert } from "@material-ui/lab"
 import AlertCommon from "./components/Alert/AlertCommon"
+import ConfirmCommon from "./components/Alert/ConfirmCommon"
 
 function App() {
   const user = JSON.parse(localStorage.getItem("profile"))
   const dispatch = useDispatch()
   const alertState = useSelector(state => state.alert);
-  console.log(alertState);
+  const confirmState = useSelector(state => state.confirm);
 
   useEffect(() => {
     const socket = io("http://localhost:3001")
@@ -35,6 +36,7 @@ function App() {
     <BrowserRouter>
       <Navbar />
       {alertState.isShow ? <AlertCommon message={alertState.message} type={alertState.type} isOpen={alertState.isShow} /> : <></>}
+      {confirmState.isShow ? <ConfirmCommon message={confirmState.message} callback={confirmState.callback} isOpen={confirmState.isShow} /> : <></>}
       <Switch>
         <Route path="/" exact component={Home} />
         <Route path="/auth" exact component={() => (user === null ? <Auth /> : <Redirect to="/" />)} />
@@ -46,7 +48,7 @@ function App() {
         <Route path="/games/host/:id" exact component={HostScreen} />
         <Route path="/games/player/:id" exact component={PlayerScreen} />
         <Route path="/myquizes" exact component={MyQuizes} />
-        <Route path="/userdetail/:id" exact component={UserDetail} />
+        <Route path="/userdetail" exact component={UserDetail} />
       </Switch>
       <Footer />
     </BrowserRouter>

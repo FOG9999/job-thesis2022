@@ -8,6 +8,7 @@ import playerResults from "./playerResults";
 import leaderboards from "./leaderboards";
 import socket from "./socket";
 import alert from "./alert";
+import confirm from "./confirm";
 
 export default combineReducers({
   users,
@@ -18,5 +19,6 @@ export default combineReducers({
   playerResults,
   leaderboards,
   socket,
-  alert
+  alert,
+  confirm
 })
