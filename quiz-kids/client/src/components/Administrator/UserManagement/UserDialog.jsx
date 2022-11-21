@@ -14,7 +14,8 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
         lastName: '',
         userName: '',
         mail: '',
-        password: ''
+        password: '',
+        confirmPassword: ''
     });
     let [confirmPassword, setConfirmPassword] = useState("");
     let [validation] = useState(validationFuncs);
@@ -37,7 +38,8 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                 lastName: '',
                 userName: '',
                 mail: '',
-                password: ''
+                password: '',
+                confirmPassword: ''
             });
         }
         setErrorFirstName(false);
@@ -48,21 +50,28 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
         setErrorConfirmPassword(false);
     }, [id])
 
-    let checkValid = (inputName, val) => {
+    useEffect(() => {
+        if(errorFirstName || errorLastName || errorUserName || errorPassword || errorConfirmPassword || errorMail){
+            setInvalid(true);
+        }
+        else setInvalid(false);
+    }, [errorFirstName, errorLastName, errorConfirmPassword, errorUserName, errorPassword, errorMail])
+
+    let checkValid = (inputName, val, passwordField) => {
         let tail = inputName.charAt(0).toUpperCase() + inputName.substring(1, inputName.length);
         let funcName = 'setError' + tail;
         if(eval(funcName)){
             if(['firstName', 'lastName'].indexOf(inputName) >= 0){
                 eval(funcName)(!validation.validateName(val))
             }
+            else if(inputName == 'confirmPassword'){
+                setErrorConfirmPassword(!validation.validateConfirmPassword(passwordField, val))
+            }
             else {
                 eval(funcName)(!validation[`validate${tail}`](val));
             }
         }
-        if(errorFirstName || errorLastName || errorUserName || errorPassword || errorConfirmPassword || errorMail){
-            setInvalid(true);
-        }
-        else setInvalid(false);
+        
     }
 
     let getUserData = async () => {
@@ -82,8 +91,9 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
         })
         if (e.target.name == 'confirmPassword') {
             setConfirmPassword(e.target.value);
+            checkValid(e.target.name, e.target.value, userModel.password)
         }
-        checkValid(e.target.name, e.target.value);
+        else checkValid(e.target.name, e.target.value);
     }
 
     return <Dialog open={isOpen} onClose={onClose}>
@@ -164,6 +174,7 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                                 <Box mt={2}>
                                     <TextField required
                                         id="outlined-required"
+                                        type='password'
                                         autoComplete="new-password"
                                         label="Confirm password"
                                         name='confirmPassword'
