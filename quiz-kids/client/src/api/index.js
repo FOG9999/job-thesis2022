@@ -16,9 +16,9 @@ export const searchUsers = (filters) => API.post("/users/search", {filters})
 export const getUser = (id) => API.get(`/users/get-user/${id}`)
 export const createUser = (newUser) => API.post("/users", newUser)
 export const updateUser = (id, updatedUser) =>
-  API.patch(`/users/${id}`, updatedUser)
+  API.patch(`/users/get-user/${id}`, updatedUser)
 export const changePassword = (id, oldPass, newPass) => API.post(`/users/changePassWord/${id}`, {oldPass, newPass});
-export const deleteUser = (id) => API.delete(`/users/${id}`)
+export const deleteUser = (id) => API.delete(`/users/get-user/${id}`)
 export const getChartDashboard = () => API.get('/users/get-chart-dashboard')
 
 export const fetchQuizes = () => API.get("/quizes")
