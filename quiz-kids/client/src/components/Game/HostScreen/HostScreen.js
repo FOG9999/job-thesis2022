@@ -135,10 +135,12 @@ function HostScreen() {
     setIsQuestionResultScreen(false)
     setIsLeaderboardScreen(true)
     setTimeout(() => {
-      socket.emit("question-preview", () => {
-        startPreviewCountdown(5, index)
-        setPlayerList([])
-      })
+      if (currentQuestionIndex + 1 < quiz.questionList.length) {
+        socket.emit("question-preview", () => {
+          startPreviewCountdown(5, index)
+          setPlayerList([])
+        })
+      }
     }, 5000)
   }
 
@@ -161,7 +163,7 @@ function HostScreen() {
       })
     }
   }
-  console.log(playerList)
+  // console.log(playerList)
   return (
     <div className={styles.page}>
       {!isGameStarted && (
