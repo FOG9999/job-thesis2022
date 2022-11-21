@@ -7,7 +7,7 @@ import TeacherManagement from './TeacherManagement/TeacherManagement';
 
 const Administrator = () => {
 
-    const [tabIndex, setTabIndex] = React.useState(2);
+    const [tabIndex, setTabIndex] = React.useState(0);
     useEffect(() => {
         console.log('init')
     }, [])

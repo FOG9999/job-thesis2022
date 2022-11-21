@@ -35,6 +35,17 @@ const getUsers = async (req, res) => {
   }
 };
 
+const getCountUsersChart = async (req, res) => {
+  try {
+    const users = await User.find();
+    const numOfTeachers = users.filter(u => u.userType == 'Teacher').length;
+    const numOfStudents = users.filter(u => u.userType == 'Student').length;
+    res.status(200).send({ numOfStudents, numOfTeachers })
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+}
+
 const searchUsers = async (req, res) => {
   try {
     const { filters } = req.body;
@@ -139,4 +150,4 @@ const changePassword = async (req, res) => {
   }
 }
 
-module.exports = { createUser, getUsers, getUser, updateUser, deleteUser, changePassword, searchUsers };
+module.exports = { createUser, getUsers, getUser, updateUser, deleteUser, changePassword, searchUsers, getCountUsersChart };

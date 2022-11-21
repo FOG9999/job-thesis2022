@@ -9,7 +9,12 @@ const {
   deleteUser,
   changePassword,
   searchUsers,
+  getCountUsersChart,
 } = require("../controllers/user");
+
+router
+.route('/get-chart-dashboard')
+.get(getCountUsersChart);
 
 router
   .route("/")
@@ -17,7 +22,7 @@ router
   .post(createUser);
 
 router
-  .route("/:id")
+  .route("/get-user/:id")
   .get(getUser)
   .patch(updateUser)
   .delete(deleteUser);
