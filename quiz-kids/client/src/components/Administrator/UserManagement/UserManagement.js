@@ -87,6 +87,7 @@ const UserManagement = ({ userType }) => {
 
     let closeDialog = () => {
         setIsOpenDialog(false);
+        setUserIdDialog(null);
     }
 
     let submitDialog = async (user) => {

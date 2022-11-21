@@ -4,25 +4,62 @@ import { useEffect } from "react";
 import { useState } from "react"
 import { useDispatch } from "react-redux";
 import * as api from '../../../api'
+import * as validationFuncs from "../../../utils/funcUtils";
 import { viewUtils } from "../../../utils/viewUtils";
 
 const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
     let dispatch = useDispatch();
-    let [userModel, setUserModel] = useState({});
+    let [userModel, setUserModel] = useState({
+        firstName: '',
+        lastName: '',
+        userName: '',
+        mail: '',
+        password: ''
+    });
     let [confirmPassword, setConfirmPassword] = useState("");
-    let [invalid, setInvalid] = useState(false)
+    let [validation] = useState(validationFuncs);
+    let [invalid, setInvalid] = useState(false);
+    let [errorFirstName, setErrorFirstName] = useState(false);
+    let [errorLastName, setErrorLastName] = useState(false);
+    let [errorUserName, setErrorUserName] = useState(false);
+    let [errorMail, setErrorMail] = useState(false);
+    let [errorPassword, setErrorPassword] = useState(false);
+    let [errorConfirmPassword, setErrorConfirmPassword] = useState(false);
 
     useEffect(() => {
-        if (id)
+        if (id) {
             getUserData();
-        else {
-            setUserModel({})
+            setInvalid(false);
         }
+        else {
+            setUserModel({
+                firstName: '',
+                lastName: '',
+                userName: '',
+                mail: '',
+                password: ''
+            });
+        }
+        setErrorFirstName(false);
+        setErrorLastName(false);
+        setErrorUserName(false);
+        setErrorMail(false);
+        setErrorPassword(false);
+        setErrorConfirmPassword(false);
     }, [id])
 
-    // useEffect(() => {
-    //     checkValid();
-    // }, [userModel])
+    let checkValid = (inputName, val) => {
+        let tail = inputName.charAt(0).toUpperCase() + inputName.substring(1, inputName.length);
+        let funcName = 'setError' + tail;
+        if(eval(funcName)){
+            if(['firstName', 'lastName'].indexOf(inputName) >= 0){
+                eval(funcName)(!validation.validateName(val))
+            }
+            else {
+                eval(funcName)(!validation[`validate${tail}`](val));
+            }
+        }
+    }
 
     let getUserData = async () => {
         let userData = await api.getUser(id);
@@ -39,6 +76,10 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
             ...userModel,
             [e.target.name]: e.target.value
         })
+        if (e.target.name == 'confirmPassword') {
+            setConfirmPassword(e.target.value);
+        }
+        checkValid(e.target.name, e.target.value);
     }
 
     return <Dialog open={isOpen} onClose={onClose}>
@@ -55,6 +96,8 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                                 label="Họ"
                                 name='firstName'
                                 fullWidth
+                                error={errorFirstName}
+                                helperText={errorFirstName ? 'Họ không hợp lệ': ''}
                                 value={userModel.firstName}
                                 onChange={onChangeTextInput}
                             />
@@ -63,6 +106,8 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                             <TextField required
                                 id="outlined-required"
                                 label="Tên"
+                                error={errorLastName}
+                                helperText={errorLastName ? 'Tên không hợp lệ': ''}
                                 name='lastName'
                                 value={userModel.lastName}
                                 fullWidth
@@ -75,6 +120,8 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                             id="outlined-required"
                             label="Email"
                             name='mail'
+                            error={errorMail}
+                            helperText={errorMail ? 'Email không hợp lệ': ''}
                             value={userModel.mail}
                             fullWidth
                             onChange={onChangeTextInput}
@@ -85,6 +132,8 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                             id="outlined-required"
                             label="Username"
                             name='userName'
+                            error={errorUserName}
+                            helperText={errorUserName ? 'Tên đăng nhập không hợp lệ': ''}
                             value={userModel.userName}
                             onChange={onChangeTextInput}
                             fullWidth
@@ -98,9 +147,11 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                                     <TextField required
                                         id="outlined-required"
                                         type='password'
-                                        autocomplete="off"
+                                        inputProps={{autoCompplete: 'off'}}
                                         label="Password"
                                         name='password'
+                                        error={errorPassword}
+                                        helperText={errorPassword ? 'Password đủ chữ thường, in hoa, số và ký tự đặc biệt': ''}
                                         value={userModel.password}
                                         onChange={onChangeTextInput}
                                         fullWidth
@@ -109,9 +160,11 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                                 <Box mt={2}>
                                     <TextField required
                                         id="outlined-required"
-                                        autocomplete="new-password"
+                                        autoComplete="new-password"
                                         label="Confirm password"
                                         name='confirmPassword'
+                                        error={errorConfirmPassword}
+                                        helperText={errorConfirmPassword ? 'Xác nhận lại mât khẩu': ''}
                                         value={confirmPassword}
                                         onChange={onChangeTextInput}
                                         fullWidth

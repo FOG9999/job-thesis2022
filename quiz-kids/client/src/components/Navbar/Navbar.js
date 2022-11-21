@@ -40,7 +40,7 @@ function Navbar() {
         <div className={styles["menu-right"]}>
           <ul className={styles.nav__list}>
             <li className={styles["nav__list-logo"]}>
-              <Link to={user.result.userName == 'administrator' ? '/admin' : '/'} className={styles["logo-link"]}>
+              <Link to={user && user.result.userName == 'administrator' ? '/admin' : '/'} className={styles["logo-link"]}>
                 <img src={logo} alt="logo" className={styles["logo-img"]} />
               </Link>
             </li>
