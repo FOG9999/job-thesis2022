@@ -59,6 +59,10 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                 eval(funcName)(!validation[`validate${tail}`](val));
             }
         }
+        if(errorFirstName || errorLastName || errorUserName || errorPassword || errorConfirmPassword || errorMail){
+            setInvalid(true);
+        }
+        else setInvalid(false);
     }
 
     let getUserData = async () => {
@@ -181,7 +185,7 @@ const UserDialog = ({ id, isOpen, onClose, onSubmit }) => {
                 <Button size="small" color="secondary" startIcon={<CloseOutlined />} style={{ marginRight: '15px' }} onClick={() => onClose()}>
                     Đóng
                 </Button>
-                <Button size="small" color="primary" startIcon={<SaveOutlined />} onClick={() => onSubmit(userModel)}>
+                <Button size="small" color="primary" disabled={invalid} startIcon={<SaveOutlined />} onClick={() => onSubmit(userModel)}>
                     Lưu
                 </Button>
             </Box>
