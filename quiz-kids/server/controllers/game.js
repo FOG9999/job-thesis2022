@@ -1,5 +1,6 @@
 const mongoose = require("mongoose")
 const Game = require("../models/game")
+const User = require("../models/user")
 const PlayerResult = require("../models/playerResult")
 
 const createGame = async (req, res) => {
@@ -88,6 +89,33 @@ const updateGame = async (req, res) => {
   }
 }
 
+const getUserGameHistory = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const user = await User.findById(userId);
+    if (user.userType == 'Student') {
+      let listJoinedGames = await Game.find({
+        playerList: userId
+      });
+      let listScores = await PlayerResult.find({
+        gameId: listJoinedGames.map(g => g._id.toString())
+      });
+      res.send({
+        listJoinedGames,
+        listScores
+      })
+    }
+    else {
+      let listGamesHost = await Game.find({
+        hostId: userId
+      });
+      res.send({listGamesHost});
+    }
+  } catch (error) {
+    res.status(500).send({ message: error.message })
+  }
+}
+
 const addPlayer = async (req, res) => {
   const { gameId } = req.params
   const { playerId } = req.body
@@ -103,4 +131,4 @@ const addPlayer = async (req, res) => {
   }
 }
 
-module.exports = { createGame, getGames, getGame, deleteGame, updateGame, addPlayer }
+module.exports = { createGame, getGames, getGame, deleteGame, updateGame, addPlayer, getUserGameHistory }

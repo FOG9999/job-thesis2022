@@ -18,7 +18,7 @@ import { ALERT_SHOWTIME } from '../../constants/consts';
 import { toggleConfirm } from '../../actions/confirm';
 
 const defaultUser = {
-    userType: USERTYPES.STUDENT,
+    userType: null,
     firstName: 'Nguyen',
     lastName: 'An',
     userName: 'anjione',
@@ -30,6 +30,7 @@ const UserDetail = () => {
     let [user, setUser] = useState({ ...defaultUser });
     let [isOpenChangePassword, setIsOpenChangePassword] = useState(false);
     let [submitIsDisabled, setSubmitIsDisabled] = useState(true);
+    let [userHistory, setUserHistory] = useState([]);
 
     let dispatch = useDispatch();
     let userStore = useSelector(state => state.auth.authData);
@@ -37,6 +38,7 @@ const UserDetail = () => {
     useEffect(() => {
         let userData = JSON.parse(localStorage.getItem('profile'));
         if (userData.result) {
+            getHistory(userData.result);
             setUser({
                 ...userData.result
             })
@@ -46,6 +48,38 @@ const UserDetail = () => {
 
     let openChangePassword = () => {
         setIsOpenChangePassword(true);
+    }
+
+    let getHistory = async (userData) => {
+        let res = await api.getUserHistory(userData._id);
+        if (res.data.message) {
+            viewUtils.showAlert(dispatch, res.data.message, 'error');
+        }
+        else {
+            let cloneHistory = [];
+            if(userData.userType == 'Student'){
+                let { listJoinedGames, listScores } = res.data;
+                listJoinedGames.forEach(game => {
+                    let score = listScores.filter(sc => sc.gameId == game._id)[0];
+                    cloneHistory.push({
+                        score: score.score,
+                        pin: game.pin,
+                        date: new Date(game.date)
+                    })
+                });
+            }
+            else if(userData.userType == 'Teacher') {
+                let { listGamesHost } = res.data;
+                listGamesHost.forEach(game => {
+                    cloneHistory.push({
+                        numOfPalyers: game.playerList.length,
+                        pin: game.pin,
+                        date: new Date(game.date)
+                    })
+                });
+            }
+            setUserHistory([...cloneHistory]);
+        }
     }
 
     let closeChangePassword = () => {
@@ -90,7 +124,7 @@ const UserDetail = () => {
             viewUtils.showAlert(dispatch, 'Update user thành công', 'success');
             updateUserClient(res.data);
         }
-        viewUtils.closeConfirm(dispatch);    
+        viewUtils.closeConfirm(dispatch);
     }
 
     let updateUserClient = (updatedUser) => {
@@ -120,6 +154,58 @@ const UserDetail = () => {
 
     let openConfirmDiscardChanges = () => {
         viewUtils.openConfirm(dispatch, 'Bạn xác nhận muốn hủy bỏ các thay đổi?', cancelChanges);
+    }
+
+    let displayStudentHistory = () => {
+        return userHistory.map((h => {
+            return <ListItem alignItems="flex-start">
+                <ListItemAvatar>
+                    <Avatar alt="Remy Sharp" src="assets/img1.jpeg" />
+                </ListItemAvatar>
+                <ListItemText
+                    primary={`Bạn đã tham gia room ${h.pin}`}
+                    secondary={
+                        <React.Fragment>
+                            <Typography
+                                sx={{ display: 'inline' }}
+                                component="span"
+                                variant="body2"
+                                color="text.primary"
+                            >
+                                vào lúc {h.date.toLocaleDateString() + ' ' + h.date.toLocaleTimeString()}
+                            </Typography>
+                            <span style={{color: 'green'}}>{` — Kết quả: ${h.score} điểm`}</span>
+                        </React.Fragment>
+                    }
+                />
+            </ListItem>
+        }))
+    }
+
+    let displayTeacherHistory = () => {
+        return userHistory.map((h => {
+            return <ListItem alignItems="flex-start">
+                <ListItemAvatar>
+                    <Avatar alt="Remy Sharp" src="assets/img1.jpeg" />
+                </ListItemAvatar>
+                <ListItemText
+                    primary={`Bạn đã tạo room ${h.pin}`}
+                    secondary={
+                        <React.Fragment>
+                            <Typography
+                                sx={{ display: 'inline' }}
+                                component="span"
+                                variant="body2"
+                                color="text.primary"
+                            >
+                                vào lúc {h.date.toLocaleDateString() + ' ' + h.date.toLocaleTimeString()}
+                            </Typography>
+                            <span style={{color: 'green'}}>{` — Số người tham gia: ${h.numOfPalyers}`}</span>
+                        </React.Fragment>
+                    }
+                />
+            </ListItem>
+        }))
     }
 
     return <Grid container spacing={5} style={{ marginTop: '6vh', width: '`00%', padding: '0px 20px 20px 20px' }}>
@@ -204,104 +290,12 @@ const UserDetail = () => {
         <Grid item md={6}>
             <Box mb={2}>
                 <Card>
-                    <CardHeader title={'Quizz statistic'} />
-                    <CardContent>
+                    <CardHeader title={'Lịch sử tham gia'} />
+                    <CardContent style={{maxHeight: '500px', overflowY: 'auto'}}>
                         <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                            <ListItem alignItems="flex-start">
-                                <ListItemAvatar>
-                                    <Avatar alt="Remy Sharp" src="assets/img1.jpeg" />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary="Brunch this weekend?"
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                sx={{ display: 'inline' }}
-                                                component="span"
-                                                variant="body2"
-                                                color="text.primary"
-                                            >
-                                                Ali Connors
-                                            </Typography>
-                                            {" — I'll be in your neighborhood doing errands this…"}
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
-                            <Divider variant="inset" component="li" />
-                            <ListItem alignItems="flex-start">
-                                <ListItemAvatar>
-                                    <Avatar alt="Travis Howard" src="assets/img1.jpeg" />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary="Summer BBQ"
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                sx={{ display: 'inline' }}
-                                                component="span"
-                                                variant="body2"
-                                                color="text.primary"
-                                            >
-                                                to Scott, Alex, Jennifer
-                                            </Typography>
-                                            {" — Wish I could come, but I'm out of town this…"}
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
-                        </List>
-                    </CardContent>
-                </Card>
-            </Box>
-            <Box my={2}>
-                <Card>
-                    <CardHeader title={'Quizz statistic'} />
-                    <CardContent>
-                        <List sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}>
-                            <ListItem alignItems="flex-start">
-                                <ListItemAvatar>
-                                    <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary="Brunch this weekend?"
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                sx={{ display: 'inline' }}
-                                                component="span"
-                                                variant="body2"
-                                                color="text.primary"
-                                            >
-                                                Ali Connors
-                                            </Typography>
-                                            {" — I'll be in your neighborhood doing errands this…"}
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
-                            <Divider variant="inset" component="li" />
-                            <ListItem alignItems="flex-start">
-                                <ListItemAvatar>
-                                    <Avatar alt="Travis Howard" src="/static/images/avatar/2.jpg" />
-                                </ListItemAvatar>
-                                <ListItemText
-                                    primary="Summer BBQ"
-                                    secondary={
-                                        <React.Fragment>
-                                            <Typography
-                                                sx={{ display: 'inline' }}
-                                                component="span"
-                                                variant="body2"
-                                                color="text.primary"
-                                            >
-                                                to Scott, Alex, Jennifer
-                                            </Typography>
-                                            {" — Wish I could come, but I'm out of town this…"}
-                                        </React.Fragment>
-                                    }
-                                />
-                            </ListItem>
+                            {
+                                user.userType == 'Student' ? displayStudentHistory() : displayTeacherHistory()
+                            }
                         </List>
                     </CardContent>
                 </Card>

@@ -1,4 +1,5 @@
 const express = require("express");
+const { getUserGameHistory } = require("../controllers/game");
 const router = express.Router();
 
 const {
@@ -34,5 +35,9 @@ router
 router
 .route('/search')
 .post(searchUsers)
+
+router
+.route('/get-user-history/:userId')
+.get(getUserGameHistory)
 
 module.exports = router;

@@ -20,6 +20,7 @@ export const updateUser = (id, updatedUser) =>
 export const changePassword = (id, oldPass, newPass) => API.post(`/users/changePassWord/${id}`, {oldPass, newPass});
 export const deleteUser = (id) => API.delete(`/users/get-user/${id}`)
 export const getChartDashboard = () => API.get('/users/get-chart-dashboard')
+export const getUserHistory = (userId) => API.get(`/users/get-user-history/${userId}`)
 
 export const fetchQuizes = () => API.get("/quizes")
 export const fetchPublicQuizes = (page) =>
