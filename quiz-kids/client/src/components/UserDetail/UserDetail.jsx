@@ -62,7 +62,7 @@ const UserDetail = () => {
                 listJoinedGames.forEach(game => {
                     let score = listScores.filter(sc => sc.gameId == game._id)[0];
                     cloneHistory.push({
-                        score: score.score,
+                        score: score? score.score : 0,
                         pin: game.pin,
                         date: new Date(game.date)
                     })
