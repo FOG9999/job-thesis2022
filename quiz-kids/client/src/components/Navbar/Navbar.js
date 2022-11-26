@@ -20,7 +20,9 @@ function Navbar() {
     dispatch({ type: actionType.LOGOUT })
     history.push("/auth")
     setUser(null)
-    socket.disconnect()
+    if(socket.active){
+      socket.disconnect()
+    }
   }
 
   useEffect(() => {
