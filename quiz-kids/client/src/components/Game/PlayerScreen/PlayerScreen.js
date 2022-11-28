@@ -28,7 +28,7 @@ function PlayerScreen() {
   const [questionData, setQuestionData] = useState()
   const [correctAnswerCount, setCorrectAnswerCount] = useState(1)
   const [isStartQuestionCountDown, setIsStartQuestionCountDown] = useState(false);
-
+  const [previewTImer, setPreviewTimer] = useState(0);
   const [answer, setAnswer] = useState({
     questionIndex: 0,
     answers: [],
@@ -93,7 +93,7 @@ function PlayerScreen() {
     let time = seconds
     setIsStartQuestionCountDown(false);
     let interval = setInterval(() => {
-      setTimer(time)
+      setPreviewTimer(time)
       if (time === 0) {
         clearInterval(interval)
         setIsPreviewScreen(false)
@@ -123,13 +123,23 @@ function PlayerScreen() {
     //   time--
     //   answerSeconds++
     // }, 1000)
+    console.log(time)
     setIsStartQuestionCountDown(true);
     setAnswerTime(answerSeconds);
     setTimer(time);
   }
 
+  useEffect(() => {
+    console.log('answerTime: ', answerTime)
+  }, [answerTime])
+
+  useEffect(() => {
+    console.log('timer: ', timer)
+  }, [timer])
+
   useInterval(() => {
     let time = timer - 1;
+    console.log('interval')
     if (timer == 0) {
       console.log('timeout!')
       console.log('timeout and answers.length is: ', answer.answers.length)
@@ -141,8 +151,8 @@ function PlayerScreen() {
       else console.log('didnt answer')
     }
     setTimer(time);
-    setAnswerTime(answerTime + 1);
-  }, timer >= 0 && isStartQuestionCountDown ? timer : null)
+    setAnswerTime(time);
+  }, timer >= 0 && isStartQuestionCountDown ? 1000 : null)
 
   const sendAnswer = async () => {
     const updatedPlayerResult = await dispatch(
@@ -200,7 +210,7 @@ function PlayerScreen() {
   }
 
   useEffect(() => {
-    console.log(answer)
+    
     if (
       answer?.answers.length > 0 &&
       answer?.answers.length === correctAnswerCount
@@ -208,6 +218,7 @@ function PlayerScreen() {
       setIsQuestionScreen(false)
       setIsQuestionAnswered(true)
       console.log('sending answer...')
+      console.log(answerTime)
       sendAnswer()
     } else {
       setIsQuestionAnswered(false)
@@ -218,7 +229,7 @@ function PlayerScreen() {
     <div className={styles.page}>
       {isPreviewScreen && (
         <div className={styles["question-preview"]}>
-          <h1>{timer >= 0 ? timer : 0}</h1>
+          <h1>{previewTImer >= 0 ? previewTImer : 0}</h1>
         </div>
       )}
       {isQuestionScreen && (
