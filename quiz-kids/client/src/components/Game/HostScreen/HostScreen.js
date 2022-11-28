@@ -73,9 +73,6 @@ function HostScreen() {
       setPlayerList((prevstate) => [...prevstate, playerData])
       console.log('received')
     })
-    socket.on('leave-game', () => {
-      socket.emit('all-leave')
-    })
   }, [socket])
 
   useEffect(() => {
@@ -184,6 +181,8 @@ function HostScreen() {
       else {
         // the end
         socket.emit('game-end');
+        console.log('host leaving room...')
+        socket.removeAllListeners("get-answer-from-player");
       }
     }, 5000)
   }

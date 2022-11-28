@@ -46,6 +46,7 @@ function PlayerScreen() {
       startPreviewCountdown(5)
     })
     socket.on("host-start-question-timer", (time, question) => {
+      console.log(question.answerList)
       setQuestionData(question.answerList)
       startQuestionCountdown(time)
       setAnswer((prevstate) => ({
@@ -69,6 +70,11 @@ function PlayerScreen() {
     })
     socket.on('leave-game', () => {
       socket.emit('all-leave')
+      console.log('player leaving...')
+      socket.removeAllListeners("host-start-preview");
+      socket.removeAllListeners("host-start-question-timer");
+      socket.removeAllListeners("give-answer-now");
+      socket.removeAllListeners("leave-game");
     })
   }, [socket])
 
