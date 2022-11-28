@@ -13,7 +13,7 @@ function Question({ question, timer, host, isAnswerClicked, onClick }) {
         <>
           <h2 className={styles["question-name"]}>{question.question}</h2>
           <div className={styles["container"]}>
-            <div className={styles["question-time"]}>{timer}</div>
+            <div className={styles["question-time"]}>{timer < 0 ? 0 : timer}</div>
             {question.backgroundImage && (
               <img src={question.backgroundImage} alt="" />
             )}

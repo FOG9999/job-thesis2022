@@ -52,6 +52,8 @@ function HostScreen() {
   const [numberOfPlayers, setNumberOfPlayers] = useState(0);
   const [indexQuestionCountDown, setIndexQuestionCountDown] = useState(0);
 
+  const [previewTimer, setPreviewTimer] = useState(0);
+
   useEffect(() => {
     dispatch(getGame(id))
   }, [id, dispatch])
@@ -64,6 +66,7 @@ function HostScreen() {
 
   useEffect(() => {
     setTimer(5)
+    setPreviewTimer(5);
   }, [])
 
   useEffect(() => {
@@ -115,7 +118,7 @@ function HostScreen() {
     setIsPreviewScreen(true)
     let time = seconds
     let interval = setInterval(() => {
-      setTimer(time)
+      setPreviewTimer(time)
       if (time === 0) {
         clearInterval(interval)
         displayQuestion(index)
@@ -171,7 +174,6 @@ function HostScreen() {
     setIsQuestionResultScreen(false)
     setIsLeaderboardScreen(true)
     setTimeout(() => {
-      console.log(currentQuestionIndex, quiz.questionList.length)
       if (currentQuestionIndex < quiz.questionList.length) {
         socket.emit("question-preview", () => {
           startPreviewCountdown(5, index)
@@ -220,7 +222,7 @@ function HostScreen() {
 
       {isPreviewScreen && (
         <div className={styles["question-preview"]}>
-          <h1>{timer < 0 ? 0 : timer}</h1>
+          <h1>{previewTimer < 0 ? 0 : previewTimer}</h1>
         </div>
       )}
       {isQuestionScreen && (
