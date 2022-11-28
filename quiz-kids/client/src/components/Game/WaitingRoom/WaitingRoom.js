@@ -2,13 +2,14 @@ import React, { useState, useEffect } from "react"
 import { useSelector } from "react-redux"
 import styles from "./waitingRoom.module.css"
 
-function WaitingRoom({ pin, socket }) {
+function WaitingRoom({ pin, socket, increaseNumberOfPlayers }) {
   const [playerList, setPlayerList] = useState([])
   const isLanguageEnglish = useSelector((state) => state.language.isEnglish)
 
   useEffect(() => {
     socket.on("player-added", (player) => {
       setPlayerList([...playerList, player])
+      increaseNumberOfPlayers()
     })
   }, [playerList, socket])
 

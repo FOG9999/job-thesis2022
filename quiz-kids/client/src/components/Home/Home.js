@@ -10,7 +10,6 @@ import { useSelector } from "react-redux"
 function Home() {
   const isLanguageEnglish = useSelector((state) => state.language.isEnglish)
   const user = useSelector(state => state.auth.authData)
-  console.log('user', user)
 
   return (
     <main className={styles.page}>

@@ -10,6 +10,7 @@ import triangle from "../../../assets/triangle.svg"
 import circle from "../../../assets/circle.svg"
 import square from "../../../assets/square.svg"
 import { CircularProgress } from "@material-ui/core"
+import useInterval from "use-interval";
 
 function PlayerScreen() {
   const socket = useSelector((state) => state.socket.socket)
@@ -26,6 +27,7 @@ function PlayerScreen() {
   const [answerTime, setAnswerTime] = useState(0)
   const [questionData, setQuestionData] = useState()
   const [correctAnswerCount, setCorrectAnswerCount] = useState(1)
+  const [isStartQuestionCountDown, setIsStartQuestionCountDown] = useState(false);
 
   const [answer, setAnswer] = useState({
     questionIndex: 0,
@@ -54,10 +56,25 @@ function PlayerScreen() {
       }))
       setCorrectAnswerCount(question.correctAnswersCount)
     })
+    socket.on('give-answer-now', ({ currentQuestionIndex }) => {
+      if (answer.answers.length == 0) {
+        console.log('giving default wrong answer...')
+        setAnswer((prevstate) => ({
+          ...prevstate,
+          questionIndex: currentQuestionIndex,
+          answers: ['1'],
+          time: 0,
+        }))
+      }
+    })
+    socket.on('leave-game', () => {
+      socket.emit('all-leave')
+    })
   }, [socket])
 
   const startPreviewCountdown = (seconds) => {
     let time = seconds
+    setIsStartQuestionCountDown(false);
     let interval = setInterval(() => {
       setTimer(time)
       if (time === 0) {
@@ -72,27 +89,51 @@ function PlayerScreen() {
   const startQuestionCountdown = (seconds) => {
     let time = seconds
     let answerSeconds = 0
-    let interval = setInterval(() => {
-      setTimer(time)
-      setAnswerTime(answerSeconds)
-      if (time === 0) {
-        clearInterval(interval)
+    // let interval = setInterval(() => {
+    //   setTimer(time)
+    //   setAnswerTime(answerSeconds)
+    //   if (time === 0) {
+    //     console.log('timeout!')
+    //     clearInterval(interval)
+
+    //     if(isQuestionAnswered){          
+    //       setIsQuestionScreen(false)
+    //       setIsQuestionAnswered(false)
+    //       setIsResultScreen(true)
+    //     }
+    //     else console.log('didnt answer')
+    //   }
+    //   time--
+    //   answerSeconds++
+    // }, 1000)
+    setIsStartQuestionCountDown(true);
+    setAnswerTime(answerSeconds);
+    setTimer(time);
+  }
+
+  useInterval(() => {
+    let time = timer - 1;
+    if (timer == 0) {
+      console.log('timeout!')
+      console.log('timeout and answers.length is: ', answer.answers.length)
+      if (answer.answers.length > 0) {
         setIsQuestionScreen(false)
         setIsQuestionAnswered(false)
         setIsResultScreen(true)
       }
-      time--
-      answerSeconds++
-    }, 1000)
-  }
+      else console.log('didnt answer')
+    }
+    setTimer(time);
+    setAnswerTime(answerTime + 1);
+  }, timer >= 0 && isStartQuestionCountDown ? timer : null)
 
   const sendAnswer = async () => {
     const updatedPlayerResult = await dispatch(
       addAnswer(answer, playerResult._id)
     )
-    console.log(
-      updatedPlayerResult.answers[updatedPlayerResult.answers.length - 1]
-    )
+    // console.log(
+    //   updatedPlayerResult.answers[updatedPlayerResult.answers.length - 1]
+    // )
     setResult(
       updatedPlayerResult.answers[updatedPlayerResult.answers.length - 1]
     )
@@ -100,11 +141,19 @@ function PlayerScreen() {
       questionIndex: answer.questionIndex,
       playerId: updatedPlayerResult.playerId,
       playerPoints:
-        updatedPlayerResult.answers[answer.questionIndex - 1].points,
+        updatedPlayerResult.answers[updatedPlayerResult.answers.length - 1].points,
+      // vì một số câu hỏi trước có thể k trả lời nên index trong anwers khác với questionIndex
+      // => chọn câu trả lời cuối cùng được insert
     }
     let score = updatedPlayerResult.score
     socket.emit("send-answer-to-host", data, score)
     dispatch(getPlayerResult(playerResult._id))
+    console.log('answer sent and isQuestionAnswer is: ', isQuestionAnswered)
+    if (timer < 0) {
+      setIsQuestionScreen(false)
+      setIsQuestionAnswered(false)
+      setIsResultScreen(true)
+    }
   }
 
   const checkAnswer = (name) => {
@@ -113,6 +162,7 @@ function PlayerScreen() {
       //remove answer
       setAnswer((prevstate) => ({
         ...prevstate,
+        time: answerTime,
         answers: [
           ...prevstate.answers.slice(0, answerIndex),
           ...prevstate.answers.slice(answerIndex + 1, prevstate.answers.length),
@@ -122,13 +172,14 @@ function PlayerScreen() {
       //add answer
       setAnswer((prevstate) => ({
         ...prevstate,
+        time: answerTime,
         answers: [...prevstate.answers, name],
       }))
     }
-    setAnswer((prevstate) => ({
-      ...prevstate,
-      time: answerTime,
-    }))
+    // setAnswer((prevstate) => ({
+    //   ...prevstate,
+    //   time: answerTime,
+    // }))
   }
 
   useEffect(() => {
@@ -138,6 +189,7 @@ function PlayerScreen() {
     ) {
       setIsQuestionScreen(false)
       setIsQuestionAnswered(true)
+      console.log('sending answer...')
       sendAnswer()
     } else {
       setIsQuestionAnswered(false)
@@ -148,7 +200,7 @@ function PlayerScreen() {
     <div className={styles.page}>
       {isPreviewScreen && (
         <div className={styles["question-preview"]}>
-          <h1>{timer}</h1>
+          <h1>{timer >= 0 ? timer : 0}</h1>
         </div>
       )}
       {isQuestionScreen && (
@@ -194,20 +246,20 @@ function PlayerScreen() {
       {isResultScreen && (
         <div
           className={styles["question-preview"]}
-          style={{ backgroundColor: result.points > 0 ? "green" : "red" }}
+          style={{ backgroundColor: result && result.points > 0 ? "green" : "red" }}
         >
           <h1>{isLanguageEnglish ? "Result" : "Kết quả"}</h1>
           <h3>
-            {result.points > 0
+            {result && result.points > 0
               ? isLanguageEnglish
                 ? "Correct"
                 : "Đúng"
               : isLanguageEnglish
-              ? "Wrong"
-              : "Sai"}
+                ? "Wrong"
+                : "Sai"}
           </h3>
           <h3>
-            {isLanguageEnglish ? "Points: " : "Điểm số: "} {result.points}
+            {isLanguageEnglish ? "Points: " : "Điểm số: "} {result && result.points ? result.points : 0}
           </h3>
         </div>
       )}

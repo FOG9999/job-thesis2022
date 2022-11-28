@@ -11,6 +11,7 @@ import {
 } from "../../../actions/leaderboard"
 import styles from "./hostScreen.module.css"
 import Question from "../Question/Question"
+import useInterval from 'use-interval';
 
 function HostScreen() {
   const socket = useSelector((state) => state.socket.socket)
@@ -48,6 +49,8 @@ function HostScreen() {
   const [currentLeaderboard, setCurrentLeaderboard] = useState(
     leaderboard?.currentLeaderboard[0]
   )
+  const [numberOfPlayers, setNumberOfPlayers] = useState(0);
+  const [indexQuestionCountDown, setIndexQuestionCountDown] = useState(0);
 
   useEffect(() => {
     dispatch(getGame(id))
@@ -68,8 +71,18 @@ function HostScreen() {
       updateLeaderboard(data, id, score)
       let playerData = { id: data.playerId, userName: player.userName }
       setPlayerList((prevstate) => [...prevstate, playerData])
+      console.log('received')
+    })
+    socket.on('leave-game', () => {
+      socket.emit('all-leave')
     })
   }, [socket])
+
+  useEffect(() => {
+    if(isGameStarted && timer <= 0 && playerList.length == numberOfPlayers){
+      displayQuestionResult(currentQuestionIndex);
+    }
+  }, [playerList]);
 
   const updateLeaderboard = async (data, id, score) => {
     let question = await dispatch(updateQuestionLeaderboard(data, id))
@@ -96,6 +109,10 @@ function HostScreen() {
     setIsPreviewScreen(true)
   }
 
+  useEffect(() => {
+    console.log('currentQuestionIndex', currentQuestionIndex)
+  }, [currentQuestionIndex])
+
   const startPreviewCountdown = (seconds, index) => {
     setIsLeaderboardScreen(false)
     setIsPreviewScreen(true)
@@ -114,14 +131,32 @@ function HostScreen() {
 
   const startQuestionCountdown = (seconds, index) => {
     let time = seconds
-    let interval = setInterval(() => {
-      setTimer(time)
-      if (time === 0) {
-        clearInterval(interval)
-        displayQuestionResult(index)
-      }
-      time--
-    }, 1000)
+    // let interval = setInterval(() => {
+    //   setTimer(time)
+    //   if (time === 0) {
+    //     clearInterval(interval)
+    //     // nếu số người chơi > số người chơi đã gửi đáp án -> đòi đáp án từ những người chơi còn lại
+    //     // họ sẽ gửi đáp án sai để bắt buộc cập nhật
+    //     forceAnswer(index);
+    //   }
+    //   time--
+    // }, 1000)
+    setTimer(time)
+    setIndexQuestionCountDown(index);
+  }
+  useInterval(() => {
+    let time = timer - 1;
+    if(timer === 0 && isQuestionScreen){
+      forceAnswer(indexQuestionCountDown);
+    }
+    setTimer(time);
+  }, (timer >= 0 && isGameStarted) ? 1000 : null);
+  const forceAnswer = (index) => {
+    if(playerList.length < numberOfPlayers){
+      console.log('give me your answers...')
+      socket.emit('force-answer', {currentQuestionIndex: currentQuestionIndex});
+    }
+    else displayQuestionResult(index)
   }
   const displayQuestionResult = (index) => {
     setIsQuestionScreen(false)
@@ -131,15 +166,24 @@ function HostScreen() {
     }, 5000)
   }
 
+  const increaseNumberOfPlayers = () => {
+    setNumberOfPlayers(numberOfPlayers+1);
+  }
+
   const displayCurrentLeaderBoard = (index) => {
     setIsQuestionResultScreen(false)
     setIsLeaderboardScreen(true)
     setTimeout(() => {
-      if (currentQuestionIndex + 1 < quiz.questionList.length) {
+      console.log(currentQuestionIndex, quiz.questionList.length)
+      if (currentQuestionIndex < quiz.questionList.length) {
         socket.emit("question-preview", () => {
           startPreviewCountdown(5, index)
           setPlayerList([])
         })
+      }
+      else {
+        // the end
+        socket.emit('game-end');
       }
     }, 5000)
   }
@@ -168,7 +212,7 @@ function HostScreen() {
     <div className={styles.page}>
       {!isGameStarted && (
         <div className={styles.lobby}>
-          <WaitingRoom pin={game?.pin} socket={socket} />
+          <WaitingRoom pin={game?.pin} socket={socket} increaseNumberOfPlayers={increaseNumberOfPlayers} />
           <button onClick={startGame}>
             {isLanguageEnglish ? "Start a game" : "Bắt đầu"}
           </button>
@@ -177,7 +221,7 @@ function HostScreen() {
 
       {isPreviewScreen && (
         <div className={styles["question-preview"]}>
-          <h1>{timer}</h1>
+          <h1>{timer < 0 ? 0 : timer}</h1>
         </div>
       )}
       {isQuestionScreen && (

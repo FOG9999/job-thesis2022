@@ -20,6 +20,9 @@ const getPlayer = (socketId) => {
 }
 
 io.on("connection", (socket) => {
+
+  console.log('new socket arrived: ', socket.id)
+
   socket.on("disconnect", (reason) => {
     console.log("Socket " + socket.id + " was disconnected")
     console.log(reason)
@@ -36,6 +39,7 @@ io.on("connection", (socket) => {
 
   socket.on("add-player", (user, socketId, pin, cb) => {
     if (game.pin === pin) {
+      console.log(`${socket.id} wants to join`)
       addPlayer(user.userName, socketId)
       // console.log(game._id)
       cb("correct", user._id, game._id)
@@ -77,6 +81,22 @@ io.on("connection", (socket) => {
   socket.on("send-answer-to-host", (data, score) => {
     let player = getPlayer(socket.id)
     socket.to(game.pin).emit("get-answer-from-player", data, leaderboard._id, score, player)
+  })
+
+  socket.on('force-answer', (data) => {
+    socket.to(game.pin).emit('give-answer-now', data);
+  })
+
+  socket.on('game-end', () => {
+    console.log('sending leave signal to all roomates...')
+    socket.to(game.pin).emit('leave-game');
+    console.log(`Host ${socket.id} leaving`);
+    socket.leave(game.pin);
+  })
+
+  socket.on('all-leave', () => {
+    console.log(`${socket.id} leaving`)
+    socket.leave(game.pin);
   })
 })
 

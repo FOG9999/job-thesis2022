@@ -16,17 +16,20 @@ function JoinGame() {
   const isLanguageEnglish = useSelector((state) => state.language.isEnglish)
 
   useEffect(()=>{
-    socket?.on("move-to-game-page", (gameId) => {
-      dispatch(
-        createPlayerResult({
-          playerId: user.result._id,
-          gameId: gameId,
-          score: 0,
-          answers: [],
-        })
-      )
-      history.push(`/games/player/${gameId}`)
-    })
+    // check nếu socket đã active thì mới add event
+    if(socket.active){
+      socket?.on("move-to-game-page", (gameId) => {
+        dispatch(
+          createPlayerResult({
+            playerId: user.result._id,
+            gameId: gameId,
+            score: 0,
+            answers: [],
+          })
+        )
+        history.push(`/games/player/${gameId}`)
+      })
+    }    
   }, [socket, dispatch, history, user.result._id])
 
   const result = (message, playerId, gameId) => {
@@ -39,6 +42,7 @@ function JoinGame() {
   }
 
   const joinGame = () => {
+    console.log('joining')
     socket.emit(
       "add-player",
       user.result,

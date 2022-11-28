@@ -30,7 +30,9 @@ function App() {
     const socket = io("http://localhost:3001")
     dispatch(createSocket(socket))
 
-    return () => socket.disconnect()
+    return () => {
+      socket.disconnect()
+    }
   }, [dispatch])
 
   return (
