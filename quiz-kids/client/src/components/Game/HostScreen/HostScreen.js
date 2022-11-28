@@ -154,7 +154,9 @@ function HostScreen() {
   const forceAnswer = (index) => {
     if(playerList.length < numberOfPlayers){
       console.log('give me your answers...')
-      socket.emit('force-answer', {currentQuestionIndex: currentQuestionIndex});
+      console.log('quiz: ', quiz)
+      let numberOfCorrectAnswer = quiz.questionList[currentQuestionIndex-1].answerList.filter(q => q.isCorrect).length;
+      socket.emit('force-answer', {currentQuestionIndex: currentQuestionIndex, numberOfCorrectAnswer});
     }
     else displayQuestionResult(index)
   }

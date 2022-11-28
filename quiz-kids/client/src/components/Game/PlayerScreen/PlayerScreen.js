@@ -40,13 +40,17 @@ function PlayerScreen() {
   }, [])
 
   useEffect(() => {
+    console.log('playerResult: ', playerResult);
+  }, [playerResult])
+
+  useEffect(() => {
     socket.on("host-start-preview", () => {
       setIsPreviewScreen(true)
       setIsResultScreen(false)
       startPreviewCountdown(5)
     })
     socket.on("host-start-question-timer", (time, question) => {
-      console.log(question.answerList)
+      console.log(question)
       setQuestionData(question.answerList)
       startQuestionCountdown(time)
       setAnswer((prevstate) => ({
@@ -57,14 +61,21 @@ function PlayerScreen() {
       }))
       setCorrectAnswerCount(question.correctAnswersCount)
     })
-    socket.on('give-answer-now', ({ currentQuestionIndex }) => {
+    socket.on('give-answer-now', ({ currentQuestionIndex, numberOfCorrectAnswer }) => {
       if (answer.answers.length == 0) {
         console.log('giving default wrong answer...')
+        const defaultWrongAnswer = {
+          questionIndex: currentQuestionIndex,
+          answers: [],
+          time: 0,
+        }
+        console.log('defaultWrongAnswer: ', defaultWrongAnswer)
+        for(let i=1; i<=numberOfCorrectAnswer; i++){
+          defaultWrongAnswer.answers.push(i.toString())
+        }
         setAnswer((prevstate) => ({
           ...prevstate,
-          questionIndex: currentQuestionIndex,
-          answers: ['1'],
-          time: 0,
+          ...defaultWrongAnswer
         }))
       }
     })
@@ -189,6 +200,7 @@ function PlayerScreen() {
   }
 
   useEffect(() => {
+    console.log(answer)
     if (
       answer?.answers.length > 0 &&
       answer?.answers.length === correctAnswerCount
